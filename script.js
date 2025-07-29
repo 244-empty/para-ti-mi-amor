@@ -18,14 +18,29 @@ const backgroundAudio = document.getElementById('background-audio');
 
 // Función para asegurar que el audio comience desde el segundo 43
 function initializeAudio() {
-  const iframe = backgroundAudio.querySelector('iframe');
-  if (iframe) {
-    // Asegurar que el parámetro start=43 esté presente y el loop funcione
-    if (!iframe.src.includes('start=43')) {
-      iframe.src = iframe.src + '&start=43';
+  if (backgroundAudio) {
+    // Configurar el volumen al 30%
+    backgroundAudio.volume = 0.3;
+    
+    // Establecer el tiempo de inicio en 43 segundos
+    backgroundAudio.currentTime = 43;
+    
+    // Intentar reproducir automáticamente
+    const playPromise = backgroundAudio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        console.log('Audio iniciado automáticamente desde el segundo 43');
+      }).catch(error => {
+        console.log('Reproducción automática bloqueada, se requiere interacción del usuario');
+        // Agregar event listener para reproducir en la primera interacción
+        document.addEventListener('click', function startAudio() {
+          backgroundAudio.currentTime = 43;
+          backgroundAudio.play();
+          document.removeEventListener('click', startAudio);
+        }, { once: true });
+      });
     }
-    // Forzar la reproducción automática
-    iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
   }
 }
 
@@ -719,4 +734,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // También inicializar cuando la ventana se carga completamente
 window.addEventListener('load', function() {
   initializeAudio();
-}); 
+});
+
+// Asegurar que el audio vuelva al segundo 43 cuando termine (para el bucle)
+if (backgroundAudio) {
+  backgroundAudio.addEventListener('ended', function() {
+    backgroundAudio.currentTime = 43;
+    backgroundAudio.play();
+  });
+} 
